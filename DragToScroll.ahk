@@ -350,6 +350,7 @@ Critical
       Target := ""
     
     ;ToolTip("Target: " . Target . "    ID-WC:" . WinHwnd . "/" . CtrlHwnd . "     X/Y:" . OriginalX . "/" . OriginalY . "     Class-WC:" . WinClass . "/" CtrlClass . "     Process:" . WinProcessPath)
+    ;ToolTip("Process Name:" . WinProcessName . "Process:" . WinProcessPath)
     
     ; if we're using the WheelKey method for this window,
     ; activate the window, so that the wheel key messages get picked up
@@ -1013,17 +1014,20 @@ Return
 ; thanks to HuBa & shimanov
 ; http://www.autohotkey.com/forum/viewtopic.php?t=18550
 ;
-GetModuleFileNameEx(ProcessID)  
+GetModuleFileNameEx(ProcessID)  ; modified version of shimanov's function
 {
   if A_OSVersion in WIN_95, WIN_98, WIN_ME
-    Return 
+    Return
+ 
+  ; #define PROCESS_VM_READ           (0x0010)
+  ; #define PROCESS_QUERY_INFORMATION (0x0400)
   hProcess := DllCall( "OpenProcess", "UInt", 0x10|0x400, "Int", False, "UInt", ProcessID)
   if (ErrorLevel or hProcess = 0)
     Return
-  FileNameSize := 260
+  FileNameSize := 260 * (A_IsUnicode ? 2 : 1)
   VarSetCapacity(ModuleFileName, FileNameSize, 0)
-  CallResult := DllCall("Psapi.dll\GetModuleFileNameExA", "UInt", hProcess, "UInt", 0, "Str", ModuleFileName, "UInt", FileNameSize)
-  DllCall("CloseHandle", hProcess)
+  CallResult := DllCall("Psapi.dll\GetModuleFileNameEx", "Ptr", hProcess, "Ptr", 0, "Str", ModuleFileName, "UInt", FileNameSize)
+  DllCall("CloseHandle", "Ptr", hProcess)
   Return ModuleFileName
 }
 
@@ -1041,8 +1045,9 @@ GuiAppSettings:
   GuiAppBuilt := true
   Gui +Delimiter|
   Gui, 2:Default
-  Gui, Add, ComboBox, x10 y15 w225 h20 r10 vGuiAppSection gGuiAppSectionChange
-  Gui, Add, Button, x240 y15 w20 h20 gGuiAppSectionRemove , -
+  Gui, Add, Text, x10 y5, Process name (chrome.exe) or window class:
+  Gui, Add, ComboBox, x10 y20 w225 h20 r10 vGuiAppSection gGuiAppSectionChange
+  Gui, Add, Button, x240 y20 w20 h20 gGuiAppSectionRemove , -
   Gui, Add, GroupBox, x10 y42 w250 h76 , Scroll Method
   Gui, Add, Text, x20 y63 w10 h10 , Y
   Gui, Add, Text, x20 y93 w10 h10 , X
@@ -1058,10 +1063,10 @@ GuiAppSettings:
   Gui, Add, Edit, x150 y140 w40 h20 vGuiSpeedX
   Gui, Add, UpDown
   Gui, Add, CheckBox, x195 y140 w50 h20 vGuiUseAccelerationX , Accel
-  Gui, Add, CheckBox, x20 y165 w85 h20 vGuiUseEdgeScrolling , Edge Scrolling
-  Gui, Add, Edit, x150 y165 w40 h20 vGuiEdgeScrollSpeed
+  Gui, Add, CheckBox, x20 y165 w100 h20 vGuiUseEdgeScrolling , Edge Scrolling
+  Gui, Add, Edit, x150 y170 w40 h20 vGuiEdgeScrollSpeed
   Gui, Add, UpDown
-  Gui, Add, Text, x195 y168 w60 h20 , Edge Speed
+  Gui, Add, Text, x195 y168 w60 r2, Edge Speed
   
   Gui, Add, GroupBox, x10 y200 w250 h110 , Options
   Gui, Add, CheckBox, x20 y220 w170 h20 vGuiScrollDisabled , Scroll Disabled
@@ -1116,6 +1121,12 @@ Return
 
 GuiAppApply:
   GuiControlGet, GuiAppSection
+  if (GuiAppSection = "")
+  {
+    MsgBox, Type in an application's process name, or window class, or process path
+    GuiControl, Focus, GuiAppSection
+    return
+  }
   temp=ScrollMethodX,ScrollMethodY,UseAccelerationX,UseAccelerationY,UseEdgeScrolling,ScrollDisabled,UseScrollMomentum,InvertDrag,UseMovementCheck,SpeedX,SpeedY,EdgeScrollSpeed
   Loop, Parse, temp, `,
   {
@@ -1244,7 +1255,7 @@ Menu, mnuScript, Add, Open Discussion, mnuScriptOpenDiscussion
 ;
 
 Menu, mnuSettings, ADD, All Settings, GuiAllSettings
-Menu, mnuSettings, ADD, App Settings, GuiAppSettings
+Menu, mnuSettings, ADD, App Specific Settings, GuiAppSettings
 
 
   
