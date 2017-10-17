@@ -128,11 +128,6 @@ Setting("GestureThreshold", 30)
 Setting("GesturePageSize", 15)
 Setting("GestureBrowserNames", "chrome.exe,firefox.exe,iexplore.exe")
 
-
-; Server settings
-; if enabled, the script automatically checks for updates at startup
-Setting("UseUpdateCheck", true)
-
 ; Change Mouse Cursor 
 ; If enabled, mouse cursor is set to the DtS hand icon during a drag
 Setting("ChangeMouseCursor", true)
@@ -248,7 +243,6 @@ Init:
   Menu, Tray, Icon
   GoSub, TrayIconInit
   GoSub, UpdateTrayIcon
-  GoSub, LoadServerSettings
 
 Return
 
@@ -280,7 +274,6 @@ Constants:
   mWheelKey := "WheelKey"              ; simulate mousewheel
   mWheelMessage := "WheelMessage"      ; send WHEEL messages
   mScrollMessage := "ScrollMessage"    ; send SCROLL messages
-  URL_SERVERSETTINGS := "http://dragtoscroll.dreamhosters.com/ServerSettings.ini"
   URL_DISCUSSION := "http://www.autohotkey.com/forum/viewtopic.php?t=59726"
 Return
 
@@ -1015,83 +1008,7 @@ LoadLocalSettingSections:
     }
 Return
 
-; Loads a simple ini settings file from the web
-; This allows the script to do automatic update checking
-; computername is included only to get a basic idea of user count
-; 
-LoadServerSettings:
-  ; check for stop cases
-  SettingsCheckTime := GetSetting("LastCheckTime", "ServerSettings")
-  if (SettingsCheckTime != "")
-  {
-    SettingsCheckDiff=
-    EnvSub, SettingsCheckDiff, %SettingsCheckTime%, Minutes
-    if (SettingsCheckDiff < 30 && !A_ThisMenuItem && VERSION == GetSetting("LastSentVersion", "ServerSettings"))
-      return  
-  }
-  if (DEBUG  && !A_ThisMenuItem)
-    return
-    
-  if (A_ThisMenuItem)
-    ToolTip("Reloading Server Settings...")
-    
-    ; load remote settings  
-  if (InternetFileRead(ServerSettings, URL_SERVERSETTINGS . "?v=" . VERSION . "&u=" . A_UserName . "@" . A_ComputerName ))
-  {
-    SaveSetting("LastCheckTime", A_Now, "ServerSettings")
-    SaveSetting("LastSentVersion", VERSION, "ServerSettings")
-    
-    ; version check
-    if (UseUpdateCheck)
-    {
-      current := ini_GetValue(ServerSettings, "Version", "Current")
-      updateMessage := ini_GetValue(ServerSettings, "Version", "UpdateMessage")
-      if (VERSION < current)
-      {
-        MsgBox, 36, DtS Update Available!, DragToScroll v%current% is available`nWould you like to get to get this update?`n%updateMessage%
-        IfMsgBox Yes
-          Run, %URL_DISCUSSION%
-      }
-    }
-  }
-Return
-
-
-; Thanks to SKAN
-; http://www.autohotkey.com/forum/topic45718.html
 ;
-InternetFileRead( ByRef V, URL="", RB=0, bSz=1024, DLP="", F=0x84000000 ) {
- Static LIB="WININET\", QRL=16, CL="00000000000000", N=""
- If ! DllCall( "GetModuleHandle", Str,"wininet.dll" )
-      DllCall( "LoadLibrary", Str,"wininet.dll" )
- If ! hIO:=DllCall( LIB "InternetOpenA", Str,N, UInt,4, Str,N, Str,N, UInt,0 )
-   Return -1
- If ! (( hIU:=DllCall( LIB "InternetOpenUrlA", UInt,hIO, Str,URL, Str,N, Int,0, UInt,F, UInt,0 ) ) || ErrorLevel )
-   Return 0 - ( !DllCall( LIB "InternetCloseHandle", UInt,hIO ) ) - 2
- If ! ( RB  )
-   If ( SubStr(URL,1,4) = "ftp:" )
-     CL := DllCall( LIB "FtpGetFileSize", UInt,hIU, UIntP,0 )
-   Else If ! DllCall( LIB "HttpQueryInfoA", UInt,hIU, Int,5, Str,CL, UIntP,QRL, UInt,0 )
-     Return 0 - ( !DllCall( LIB "InternetCloseHandle", UInt,hIU ) )
-              - ( !DllCall( LIB "InternetCloseHandle", UInt,hIO ) ) - 4
- VarSetCapacity( V,64 ), VarSetCapacity( V,0 )
- SplitPath, URL, FN,,,, DN
- FN:=(FN ? FN : DN), CL:=(RB ? RB : CL), VarSetCapacity( V,CL,32 ), P:=&V,
- B:=(bSz>CL ? CL : bSz), TtlB:=0, LP := RB ? "Unknown" : CL,  %DLP%( True,CL,FN )
- Loop {
-       If ( DllCall( LIB "InternetReadFile", UInt,hIU, UInt,P, UInt,B, UIntP,R ) && !R )
-       Break
-       P:=(P+R), TtlB:=(TtlB+R), RemB:=(CL-TtlB), B:=(RemB<B ? RemB : B), %DLP%( TtlB,LP )
-       Sleep -1
- } TtlB<>CL ? VarSetCapacity( T,TtlB ) DllCall( "RtlMoveMemory", Str,T, Str,V, UInt,TtlB )
-  . VarSetCapacity( V,0 ) . VarSetCapacity( V,TtlB,32 ) . DllCall( "RtlMoveMemory", Str,V
-  , Str,T, UInt,TtlB ) . %DLP%( TtlB, TtlB ) : N
- If ( !DllCall( LIB "InternetCloseHandle", UInt,hIU ) )
-  + ( !DllCall( LIB "InternetCloseHandle", UInt,hIO ) )
-   Return -6
-Return, VarSetCapacity(V)+((ErrorLevel:=(RB>0 && TtlB<RB)||(RB=0 && TtlB=CL) ? 0 : 1)<<64)
-}
-
 ; Retrieve the full path of a process with ProcessID
 ; thanks to HuBa & shimanov
 ; http://www.autohotkey.com/forum/viewtopic.php?t=18550
@@ -1310,7 +1227,6 @@ MenuInit:
 
 Menu, mnuScript, ADD, Reload, mnuScriptReload
 Menu, mnuScript, ADD, Reload Settings, LoadLocalSettings
-Menu, mnuScript, ADD, Reload Server-Settings, LoadServerSettings
 
 Menu, mnuScript, ADD, Debug, mnuScriptDebug
 
