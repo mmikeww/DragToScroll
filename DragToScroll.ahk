@@ -129,12 +129,21 @@ Setting("GesturePageSize", 15)
 Setting("GestureBrowserNames", "chrome.exe,firefox.exe,iexplore.exe")
 
 ; Change Mouse Cursor 
-; If enabled, mouse cursor is set to the DtS hand icon during a drag
+; If enabled, mouse cursor is set to the cursor specified below
 Setting("ChangeMouseCursor", true)
 
+; If the above ChangeMouseCursor setting is true, this determines what cursor style
+; Choose either:
+;       "cursorHand"           -  the original DragToScroll hand icon
+;       "cursorScrollPointer"  -  the scrollbar and pointer icon (SYNTPRES.ico)
+;                                 this cursor will mostly stay stationary but you should
+;                                 still have the KeepCursorStationary set to 'true'
+Setting("ChangedCursorStyle", "cursorScrollPointer")
+
 ; If enabled, cursor will stay in its initial position for the duration of the drag
-; This can look jittery because it updates based on the PollFrequency setting above
-Setting("KeepCursorStationary", false)
+; This can look jittery with the "cursorHand" style because it updates based
+; on the PollFrequency setting above
+Setting("KeepCursorStationary", true)
 Return
 
 
@@ -246,6 +255,15 @@ Init:
   Menu, Tray, Icon
   GoSub, TrayIconInit
   GoSub, UpdateTrayIcon
+
+  ; Initialize GUI for new cursor
+  if (ChangeMouseCursor) && (ChangedCursorStyle = "cursorScrollPointer")
+  {
+     Gui, 98: Add, Pic, x0 y0 vMyIconVar hWndMyIconHwnd 0x3, %A_ScriptDir%\SYNTPRES.ico      ; 0x3 = SS_ICON
+     Gui, 98: Color, gray
+     Gui, 98: +LastFound -Caption +AlwaysOnTop +ToolWindow
+     WinSet, TransColor, gray
+  }
 
 Return
 
@@ -407,7 +425,11 @@ ButtonUp:
   ; done before handling momentum since we've already released the button
   GoSub UpdateTrayIcon
   if (ChangeMouseCursor)
+  {
     RestoreSystemCursor()
+    if (ChangedCursorStyle = "cursorScrollPointer")
+      Gui, 98: Hide
+  }
 
   ; check for and apply momentum
   if (DragStatus == DS_DRAGGING)
@@ -451,10 +473,24 @@ DragStart:
     ; Update the status, we're dragging now
     DragStatus := DS_DRAGGING
     
-    ; Update the cursor & icon 
+    ; Update the cursor & trayicon
     SetTrayIcon(hIconDragging)
     if (ChangeMouseCursor)
-      SetSystemCursor(hIconDragging)
+    {
+      if (ChangedCursorStyle = "cursorScrollPointer")
+      {
+        ;// show GUI with scrolling icon
+        Gui, 98: Show, x%OriginalX% y%OriginalY% NoActivate
+        Gui, 98: +LastFound
+        WinSet, AlwaysOnTop, On
+        ;// "hide" cursor by replacing it with blank cursor (from the AHK help file for DllCall command)
+        VarSetCapacity(AndMask, 32*4, 0xFF)
+        VarSetCapacity(XorMask, 32*4, 0)
+        SetSystemCursor(DllCall("CreateCursor", "uint", 0, "int", 0, "int", 0, "int", 32, "int", 32, "uint", &AndMask, "uint", &XorMask))
+      } 
+      else
+        SetSystemCursor(hIconDragging)
+    }
 
     ; set up for next pass
     ; to find the difference (New - Old)
@@ -549,7 +585,11 @@ HoldStart:
   Send, {%Button% Down}
   GoSub UpdateTrayIcon
   if (ChangeMouseCursor)
+  {
     RestoreSystemCursor()
+    if (ChangedCursorStyle = "cursorScrollPointer")
+      Gui, 98: Hide
+  }
 Return
 
 ; Exiting the HOLDING state. 
