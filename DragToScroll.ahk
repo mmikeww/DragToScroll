@@ -1,6 +1,12 @@
 /*
 DragToScroll.ahk
+
+new discussion:
+https://autohotkey.com/boards/viewtopic.php?f=6&t=38457
+
+old discussion:
 http://www.autohotkey.com/forum/viewtopic.php?t=59726
+https://autohotkey.com/board/topic/55289-dragtoscroll-universal-drag-flingflick-scrolling/
 
 Scroll any active window by clicking and dragging with the right mouse button. 
 Should not interfere with normal right clicking. 
@@ -45,35 +51,35 @@ Setting("PollFrequency", 20)                  ; in ms
 ; Affects the overall speed of scrolling before acceleration
 ; Speed is "normalized" to 1.0 as a default
 Setting("DragThreshold", 0)                   ; in pixels
-Setting("SpeedX", 1.0)                        
-Setting("SpeedY", 1.0)                        
+Setting("SpeedX", 0.5)
+Setting("SpeedY", 1.0)
 
 ; MovementCheck
 ; if enabled, this check will abort dragging
 ; if you have not moved the mouse over MovementThreshold
 ; within the first MovementCheckDelay ms
 ; This is used for compatibility with other button-hold actions
-Setting("UseMovementCheck", false)
-Setting("MovementCheckDelay", 200)            ; in ms
+Setting("UseMovementCheck", true)
+Setting("MovementCheckDelay", 500)            ; in ms
 Setting("MovementThreshold", 0)               ; in px
 
 ; scroll method
 ; choose one of: mWheelKey, mWheelMessage, mScrollMessage
 ; WheelMessage & WheelKey are preferred; your results may vary
-Setting("ScrollMethodX", mScrollMessage)
-Setting("ScrollMethodY", mWheelMessage)
+Setting("ScrollMethodX", mWheelKey)
+Setting("ScrollMethodY", mWheelKey)
 
 ; invert drag
 ; by default, you "drag" the document; moving up drags the document up,
 ; showing more of the document below. This behavior is the inverse of 
 ; scrolling up, where you see more of the document above.
 ; The invert flag switches the drag to the "scroll" behavior
-Setting("InvertDrag", false)
+Setting("InvertDrag", true)
 
 ; Edge Scrolling
 ; allows you to hover over a window edge
 ; to continue scrolling, at a fixed rate
-Setting("UseEdgeScrolling", true)
+Setting("UseEdgeScrolling", false)
 Setting("EdgeScrollingThreshold", 15)         ; in px, distance from window edge
 Setting("EdgeScrollSpeed", 2.0)               ; in 'speed'; 1.0 is about 5px/sec drag
 
@@ -90,12 +96,12 @@ Setting("ConfineToControl", false)
 
 
 ; Acceleration & momentum
-Setting("UseAccelerationX", false)
+Setting("UseAccelerationX", true)
 Setting("UseAccelerationY", true)
 Setting("MomentumThreshold", 0.7)             ; in 'speed'. Minimum speed to trigger momentum. 1 is always
 Setting("MomentumStopSpeed", 0.25)            ; in 'speed'. Scrolling is stopped when momentum slows to this value
 Setting("MomentumInertia", .93)               ; (0 < VALUE < 1) Describes how fast the scroll momentum dampens
-Setting("UseScrollMomentum", true)
+Setting("UseScrollMomentum", false)
 
 ; Acceleration function
 ; - modify very carefully!!
@@ -116,14 +122,14 @@ Accelerate(arg)
 ; Simply set UseDoubleClickCheck := true
 ; Define ButtonDoubleClick (below) to do anything you want
 Setting("DoubleClickThreshold", DllCall("GetDoubleClickTime"))
-Setting("UseDoubleClickCheck", true)
+Setting("UseDoubleClickCheck", false)
 
 ; Gesture checking
 ; 
 ; If enabled, simple gestures are detected, (only supports flick UDLR)
 ; and gesture events are called for custom actions, 
 ; rather than dragging with momentum.
-Setting("UseGestureCheck", true)
+Setting("UseGestureCheck", false)
 Setting("GestureThreshold", 30)
 Setting("GesturePageSize", 15)
 Setting("GestureBrowserNames", "chrome.exe,firefox.exe,iexplore.exe")
@@ -295,7 +301,7 @@ Constants:
   mWheelKey := "WheelKey"              ; simulate mousewheel
   mWheelMessage := "WheelMessage"      ; send WHEEL messages
   mScrollMessage := "ScrollMessage"    ; send SCROLL messages
-  URL_DISCUSSION := "http://www.autohotkey.com/forum/viewtopic.php?t=59726"
+  URL_DISCUSSION := "https://autohotkey.com/boards/viewtopic.php?f=6&t=38457"
 Return
 
 
@@ -610,7 +616,7 @@ MovementCheck:
 
   ; if we havent moved past the threshold start hold
   if (MoveDist <= MovementThreshold)
-  	GoSub, HoldStart
+    GoSub, HoldStart
   Critical, Off
 Return
 
