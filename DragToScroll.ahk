@@ -400,6 +400,12 @@ ButtonUp:
   if (DragStatus == DS_NEW)
     GoSub, DragSkip
 
+  ; update icons & cursor
+  ; done before handling momentum since we've already released the button
+  GoSub UpdateTrayIcon
+  if (ChangeMouseCursor)
+    RestoreSystemCursor()
+
   ; check for and apply momentum
   if (DragStatus == DS_DRAGGING)
     GoSub, DragMomentum
@@ -516,11 +522,6 @@ DragStop:
 
   ; finish drag
   DragStatus := DS_HANDLED
-
-  ; update icons & cursor
-  GoSub UpdateTrayIcon
-  if (ChangeMouseCursor)
-    RestoreSystemCursor()
 Return
 
 
