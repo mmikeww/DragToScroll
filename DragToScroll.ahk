@@ -276,7 +276,7 @@ Return
 ; Constants
 ;--------------------------------
 Constants:
-  VERSION = 2.4
+  VERSION = 2.5
   DEBUG = 0
   WM_HSCROLL = 0x114
   WM_VSCROLL = 0x115
