@@ -715,7 +715,7 @@ Scroll(arg, horizontal="", format="px")
     if (!horizontal)
       wparam := Direction < 0 ? "{WheelDown}" : "{WheelUp}"
     else
-      wparam := Direction < 0 ? "{WheelLeft}" : "{WheelRight}"
+      wparam := Direction < 0 ? "{WheelRight}" : "{WheelLeft}"
       
     Loop, %Factor%
       Send, %wparam%
