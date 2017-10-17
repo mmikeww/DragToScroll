@@ -132,6 +132,9 @@ Setting("GestureBrowserNames", "chrome.exe,firefox.exe,iexplore.exe")
 ; If enabled, mouse cursor is set to the DtS hand icon during a drag
 Setting("ChangeMouseCursor", true)
 
+; If enabled, cursor will stay in its initial position for the duration of the drag
+; This can look jittery because it updates based on the PollFrequency setting above
+Setting("KeepCursorStationary", false)
 Return
 
 
@@ -483,8 +486,9 @@ DragStart:
     DiffX := NewX - OldX
     if (abs(DiffX) > DragThreshold)
     {
+      SetTimer, MovementCheck, Off
       Scroll(DiffX, true)
-      if (DragThreshold > 0)
+      if (DragThreshold > 0) && (!KeepCursorStationary)
         OldX := NewX
     }
 
@@ -493,10 +497,14 @@ DragStart:
     DiffY := NewY - OldY
     if (abs(DiffY) > DragThreshold)
     {
+      SetTimer, MovementCheck, Off
       Scroll(DiffY)
-      if (DragThreshold > 0)
+      if (DragThreshold > 0) && (!KeepCursorStationary)
         OldY := NewY
     }
+
+    if (KeepCursorStationary)
+      MouseMove, OriginalX, OriginalY
 
     ; Check for window edge scrolling 
     GoSub CheckEdgeScrolling
@@ -505,7 +513,7 @@ DragStart:
     ; and attempt to drag every iteration.
     ; whereas with a positive non-zero threshold,
     ; coords are updated only when threshold crossing (above)
-    if (DragThreshold <= 0)
+    if (DragThreshold <= 0) && (!KeepCursorStationary)
     {
       OldX := NewX
       OldY := NewY
