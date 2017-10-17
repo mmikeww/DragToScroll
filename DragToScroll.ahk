@@ -547,6 +547,9 @@ HoldStart:
   SetTimer, DragStart, Off
   DragStatus := DS_HOLDING
   Send, {%Button% Down}
+  GoSub UpdateTrayIcon
+  if (ChangeMouseCursor)
+    RestoreSystemCursor()
 Return
 
 ; Exiting the HOLDING state. 
