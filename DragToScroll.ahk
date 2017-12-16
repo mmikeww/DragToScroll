@@ -142,8 +142,6 @@ Setting("ChangeMouseCursor", true)
 ; Choose either:
 ;       "cursorHand"           -  the original DragToScroll hand icon
 ;       "cursorScrollPointer"  -  the scrollbar and pointer icon (SYNTPRES.ico)
-;                                 this cursor will mostly stay stationary but you should
-;                                 still have the KeepCursorStationary set to 'true'
 Setting("ChangedCursorStyle", "cursorScrollPointer")
 
 ; If enabled, cursor will stay in its initial position for the duration of the drag
@@ -547,6 +545,8 @@ DragStart:
 
     if (KeepCursorStationary)
       MouseMove, OriginalX, OriginalY
+    else if (ChangedCursorStyle = "cursorScrollPointer")
+      Gui, 98: Show, x%NewX% y%NewY% NoActivate
 
     ; Check for window edge scrolling 
     GoSub CheckEdgeScrolling
