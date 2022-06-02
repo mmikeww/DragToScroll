@@ -240,6 +240,11 @@ Return
 ; Init
 ;--------------------------------
 Init:
+  ;// make sure to get the correct coords from MouseGetPos when used on
+  ;// a 2nd screen which uses a different scaling % inside Windows
+  ;// https://www.autohotkey.com/boards/viewtopic.php?f=14&t=13810
+  DllCall("SetThreadDpiAwarenessContext", "ptr", -3, "ptr")
+
   CoordMode, Mouse, Screen
   Gosub, Constants
   Gosub, Reset
