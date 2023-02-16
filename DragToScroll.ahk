@@ -94,6 +94,8 @@ Setting("UseControlTargeting", true)
 Setting("ConfineToWindow", false)
 Setting("ConfineToControl", false)
 
+; Sends Setting("Button") if scrolling does not happen
+Setting("SendButtonIfNoScroll", false)
 
 ; Acceleration & momentum
 Setting("UseAccelerationX", true)
@@ -330,6 +332,7 @@ Reset:
   NewWinHwnd=
   NewCtrlHwnd=
   Target=
+  Scrolled=
 Return
 
 
@@ -577,6 +580,10 @@ DragStop:
 
   ; finish drag
   DragStatus := DS_HANDLED
+
+  if (SendButtonIfNoScroll && !Scrolled) {
+    Send {%Button%}
+  }
 Return
 
 
@@ -788,6 +795,8 @@ Scroll(arg, horizontal="", format="px")
         PostMessage, WM_HSCROLL, wparam, 0,, Ahk_ID %CtrlHwnd%
     }
   }
+  
+  Scrolled := true
 }
 
 ; Handler to check for a double-click of the right mouse button
@@ -1601,4 +1610,3 @@ ToolTip(Text, visibleSec=2)
   ToolTip
   Return
 }
-
