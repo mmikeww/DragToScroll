@@ -95,7 +95,7 @@ Setting("ConfineToWindow", false)
 Setting("ConfineToControl", false)
 
 ; Sends Setting("Button") if scrolling does not happen
-Setting("SendButtonIfNoScroll", true)
+Setting("SendButtonIfNoScroll", false)
 
 ; Acceleration & momentum
 Setting("UseAccelerationX", true)
